@@ -100,8 +100,7 @@ def quotes_scraper():
         @task
         def not_implemented():
             pass
-
         
-    extract() 
+    extract() >> transform() >> load()
     
 quotes_scraper()
