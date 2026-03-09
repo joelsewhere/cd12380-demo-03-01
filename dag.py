@@ -20,12 +20,14 @@ def quotes_scraper():
     def extract():
 
         @task
-        def quotes(filepath, extract_key, BUCKET):
+        def quotes(filepath, extract_key):
             from airflow.providers.amazon.aws.hooks.s3 import S3Hook
             from bs4 import BeautifulSoup
             
+            # Collect quotes
             html = pathlib.Path(filepath).read_text()
             
+            # Push quotes to S3
             hook = S3Hook()
             hook.load_string(
                 string_data=html,
@@ -34,22 +36,41 @@ def quotes_scraper():
                 replace=True,
                 )
             
+            # Scrape author urls
             soup = BeautifulSoup(html, features="lxml")
             author_containers = soup.find_all('small', {'class': 'author'})
-            author_links = [x.parent.find('a').attrs['href'] for x in author_containers]
+            author_urls = [x.parent.find('a').attrs['href'] for x in author_containers]
 
-            return author_links
+            # Push author urls
+            return author_urls
         
         @task
-        def authors(author_links, extract_key, BUCKET, ds):
+        def authors(author_links, extract_key, ds):
             from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
+            # Initialize S3 Hook
             hook = S3Hook()
+
+            # Loop over items in author_links
             for link in author_links:
+
+                # Isolate the author's name in the author link
                 author_name = link.split('/')[-1]
-                filepath = pathlib.Path(__file__).parent / 'authors' / (author_name + '-' + ds + '.html') 
+
+                # Define the filepath to the html file
+                filepath = (
+                    pathlib.Path(__file__).parent / 
+                    'authors' / 
+                    (ds + '-' + author_name + '.html')
+                    )
+                
+                # Read the html from the file
                 html = filepath.read_text()
+
+                # Define the S3 Key for the raw author html file
                 key = extract_key + f'/authors/{author_name}.html'
+
+                # Push the author html to S3
                 hook.load_string(
                     string_data=html,
                     key=key,
@@ -57,10 +78,14 @@ def quotes_scraper():
                     replace=True
                     )
         
-        extract_key = S3_KEYS['extract']
+        # Define the filepath for the quotes html file
         filepath = (DAG_ROOT / 'quotes' / 'quotes-{{ ds }}.html').as_posix()
-        author_links = quotes(filepath, extract_key, BUCKET)
-        authors(author_links, extract_key, BUCKET)
+
+        # Call the `quotes` task
+        author_links = quotes(filepath, S3_KEYS['extract'])
+
+        # Call the `authors` task
+        authors(author_links, S3_KEYS['extract'])
 
     @task_group
     def transform():

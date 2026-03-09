@@ -30,7 +30,7 @@ def write_author_pages(soup, date_siffix):
         author_path = author.attrs['href'] + '/'
         url = root + author_path
         result = get(url)
-        file_path = project_root / 'authors' / (author_path.split("/")[-2] + f'-{date_suffix}' + '.html')
+        file_path = project_root / 'authors' / (date_suffix + '-' + author_path.split("/")[-2] + '.html')
         with file_path.open('w') as file:
             print('Writing', file_path.as_posix() + '...')
             file.write(result.text)
