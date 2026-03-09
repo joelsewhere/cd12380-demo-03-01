@@ -2,11 +2,11 @@ from airflow.sdk import dag, task, task_group
 import pathlib
 from datetime import datetime
 
-SCHEMA="scraped_quotes", 
-DAG_ROOT=pathlib.Path(__file__).parent,
-BUCKET='l3-external-storage-753900908173',
+SCHEMA="scraped_quotes"
+DAG_ROOT=pathlib.Path(__file__).parent
+BUCKET='l3-external-storage-753900908173'
 S3_KEYS={
-    'extract': '{{ dag.dag_id }}/extract/{{ ds }}',
+    'extract': '{{ dag.dag_id }}/extract/{{ ds }}'
     }
 
 @dag(
