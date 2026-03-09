@@ -10,6 +10,7 @@ S3_KEYS={
     }
 
 @dag(
+    schedule='@daily',
     start_date=datetime(2025, 3, 5),
     end_date=datetime(2026, 3, 13),
     )
