@@ -34,7 +34,7 @@ def quotes_scraper():
                 replace=True,
                 )
             
-            soup = BeautifulSoup(html)
+            soup = BeautifulSoup(html, features="lxml")
             author_containers = soup.find_all('small', {'class': 'author'})
             author_links = [x.parent.find('a').attrs['href'] for x in author_containers]
 
@@ -47,7 +47,7 @@ def quotes_scraper():
             hook = S3Hook()
             for link in author_links:
                 author_name = link.split('/')[-1]
-                filepath = pathlib.Path(__file__).parent / (author_name + '-' + ds + '.html') 
+                filepath = pathlib.Path(__file__).parent / 'authors' / (author_name + '-' + ds + '.html') 
                 html = filepath.read_text()
                 key = extract_key + f'/authors/{author_name}.html'
                 hook.load_string(
